@@ -156,6 +156,12 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
         onUpdateRequirements({ requiredAttributes: attributeLabels });
       }
     }
+
+    // Persist to configuration data
+    onUpdate({
+      attributePackage: packageId,
+      selectedCustomAttributes: []
+    });
   };
 
   // Handle custom attribute toggle
@@ -173,6 +179,12 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
         });
         onUpdateRequirements({ requiredAttributes: attributeLabels });
       }
+
+      // Persist to configuration data
+      onUpdate({
+        attributePackage: '',
+        selectedCustomAttributes: newCustomAttrs
+      });
 
       return newCustomAttrs;
     });
@@ -315,11 +327,16 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
                                   size="sm"
                                   className="flex-1"
                                   onClick={() => {
-                                    setCustomAttributes(ALL_ATTRIBUTES.map(a => a.value));
+                                    const allAttrValues = ALL_ATTRIBUTES.map(a => a.value);
+                                    setCustomAttributes(allAttrValues);
                                     setSelectedPackage('');
                                     if (onUpdateRequirements) {
                                       onUpdateRequirements({ requiredAttributes: ALL_ATTRIBUTES.map(a => a.label) });
                                     }
+                                    onUpdate({
+                                      attributePackage: '',
+                                      selectedCustomAttributes: allAttrValues
+                                    });
                                   }}
                                 >
                                   Select All
@@ -333,6 +350,10 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
                                     if (onUpdateRequirements) {
                                       onUpdateRequirements({ requiredAttributes: [] });
                                     }
+                                    onUpdate({
+                                      attributePackage: '',
+                                      selectedCustomAttributes: []
+                                    });
                                   }}
                                 >
                                   Clear All

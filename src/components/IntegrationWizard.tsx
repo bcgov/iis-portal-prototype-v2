@@ -74,6 +74,8 @@ export interface WizardData {
       goLiveDate?: Date;
       businessApprovalContact?: string;
     };
+    attributePackage?: string;
+    selectedCustomAttributes?: string[];
     lastSaved?: Date;
   };
 }

@@ -12,6 +12,55 @@ interface ReviewStepProps {
   onEditStep?: (step: number) => void;
 }
 
+// Attribute packages for display
+const ATTRIBUTE_PACKAGES = {
+  name: {
+    label: 'Name',
+    description: 'Given name, Family name, Display name'
+  },
+  sendInformation: {
+    label: 'Send Information',
+    description: 'Name, Mailing address, Email address'
+  },
+  ageVerification: {
+    label: 'Age Verification',
+    description: 'Name, Mailing address, Email address, Date of birth'
+  }
+};
+
+// All available attributes for mapping
+const ALL_ATTRIBUTES = [
+  { value: 'display_name', label: 'Name' },
+  { value: 'given_name', label: 'Given Name' },
+  { value: 'given_names', label: 'Given Names' },
+  { value: 'family_name', label: 'Surname' },
+  { value: 'birthdate', label: 'Date of Birth' },
+  { value: 'age', label: 'Age' },
+  { value: 'age_19_or_over', label: 'Age 19 Or Over' },
+  { value: 'gender', label: 'Sex' },
+  { value: 'email', label: 'Email Address' },
+  { value: 'street_address', label: 'Street Address' },
+  { value: 'locality', label: 'City/Town' },
+  { value: 'region', label: 'State Or Province' },
+  { value: 'postal_code', label: 'Postal Code' },
+  { value: 'country', label: 'Country' },
+  { value: 'address', label: 'Address (all address lines)' },
+  { value: 'sub', label: 'User Identifier' },
+  { value: 'identity_assurance_level', label: 'Identity Assurance Level' },
+  { value: 'identity_assurance_level1', label: 'Identity Assurance Level 1' },
+  { value: 'identity_assurance_level2', label: 'Identity Assurance Level 2' },
+  { value: 'identity_assurance_level3', label: 'Identity Assurance Level 3' },
+  { value: 'identification_level', label: 'Identification Level' },
+  { value: 'user_type', label: 'User Type' },
+  { value: 'transaction_identifier', label: 'Transaction Identifier' },
+  { value: 'transaction_type', label: 'Transaction Type' },
+  { value: 'client_id', label: 'Relying Party Identifier' },
+  { value: 'sector_identifier_uri', label: 'Privacy Zone Identifier' },
+  { value: 'authentication_zone_identifier', label: 'Authentication Zone Identifier' },
+  { value: 'authoritative_party_identifier', label: 'Authoritative Party Identifier' },
+  { value: 'authoritative_party_name', label: 'Authoritative Party Name' }
+];
+
 const ReviewStep = ({ data, onEditStep }: ReviewStepProps) => {
   return (
     <div className="space-y-6">
@@ -304,49 +353,106 @@ const ReviewStep = ({ data, onEditStep }: ReviewStepProps) => {
                 data.configuration.production && 'Production'
               ].filter(Boolean).join(', ');
 
+              // Check which IDPs were recommended
+              const recommendedIDPs = data.solution.components || [];
+              const hasBCSC = recommendedIDPs.some(c => c.toLowerCase().includes('bc services card') || c.toLowerCase().includes('bcsc'));
+              const hasPersonCredential = recommendedIDPs.some(c => c.toLowerCase().includes('person credential'));
+
               // Single configuration display for all cases
               return (
-                <div className="border rounded-lg p-3">
-                  <h4 className="font-medium mb-2">{data.projectInfo.productName || 'Product'}</h4>
-                  <div className="space-y-1 text-sm">
-                    <div>
-                      <span className="font-medium">Environments:</span> {selectedEnvironments}
+                <>
+                  <div className="border rounded-lg p-3">
+                    <h4 className="font-medium mb-2">{data.projectInfo.productName || 'Product'}</h4>
+                    <div className="space-y-1 text-sm">
+                      <div>
+                        <span className="font-medium">Environments:</span> {selectedEnvironments}
+                      </div>
+                      {data.configuration.development && (
+                        <div>
+                          <span className="font-medium">Dev App:</span> {data.configuration.developmentConfig?.applicationName}
+                        </div>
+                      )}
+                      {data.configuration.test && (
+                        <div>
+                          <span className="font-medium">Test App:</span> {data.configuration.testConfig?.applicationName}
+                        </div>
+                      )}
+                      {data.configuration.production && (
+                        <div>
+                          <span className="font-medium">Prod App:</span> {data.configuration.productionConfig?.applicationName}
+                        </div>
+                      )}
                     </div>
-                    {data.configuration.development && (
-                      <div>
-                        <span className="font-medium">Dev App:</span> {data.configuration.developmentConfig?.applicationName}
-                      </div>
-                    )}
-                    {data.configuration.test && (
-                      <div>
-                        <span className="font-medium">Test App:</span> {data.configuration.testConfig?.applicationName}
-                      </div>
-                    )}
-                    {data.configuration.production && (
-                      <div>
-                        <span className="font-medium">Prod App:</span> {data.configuration.productionConfig?.applicationName}
-                      </div>
-                    )}
                   </div>
-                </div>
+
+                  {/* Attribute Selection Display */}
+                  {(hasBCSC || hasPersonCredential) && (
+                    <>
+                      <Separator className="my-3" />
+                      <div className="border rounded-lg p-3">
+                        <h4 className="font-medium mb-2">
+                          {hasPersonCredential ? "BC Services Card & Person Credential" : "BC Services Card"}
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {data.configuration.attributePackage && !data.configuration.selectedCustomAttributes?.length && (
+                            // Scenario 1: Package only
+                            <>
+                              <div>
+                                <span className="font-medium">Attribute Package:</span>{' '}
+                                {ATTRIBUTE_PACKAGES[data.configuration.attributePackage as keyof typeof ATTRIBUTE_PACKAGES]?.label}
+                              </div>
+                              <div className="text-muted-foreground">
+                                Included attributes: {ATTRIBUTE_PACKAGES[data.configuration.attributePackage as keyof typeof ATTRIBUTE_PACKAGES]?.description}
+                              </div>
+                            </>
+                          )}
+
+                          {!data.configuration.attributePackage && data.configuration.selectedCustomAttributes && data.configuration.selectedCustomAttributes.length > 0 && (
+                            // Scenario 2: Custom attributes only
+                            <>
+                              <div className="font-medium mb-1">Custom Attributes Selected:</div>
+                              <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
+                                {data.configuration.selectedCustomAttributes.slice(0, 7).map((attrValue) => {
+                                  const attr = ALL_ATTRIBUTES.find(a => a.value === attrValue);
+                                  return (
+                                    <li key={attrValue}>{attr?.label || attrValue}</li>
+                                  );
+                                })}
+                                {data.configuration.selectedCustomAttributes.length > 7 && (
+                                  <li className="text-xs">and {data.configuration.selectedCustomAttributes.length - 7} more...</li>
+                                )}
+                              </ul>
+                            </>
+                          )}
+
+                          {data.configuration.attributePackage && data.configuration.selectedCustomAttributes && data.configuration.selectedCustomAttributes.length > 0 && (
+                            // Scenario 3: Both package and custom attributes
+                            <>
+                              <div>
+                                <span className="font-medium">Base Package:</span>{' '}
+                                {ATTRIBUTE_PACKAGES[data.configuration.attributePackage as keyof typeof ATTRIBUTE_PACKAGES]?.label}
+                              </div>
+                              <div className="font-medium mt-2">Additional Attributes:</div>
+                              <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
+                                {data.configuration.selectedCustomAttributes.slice(0, 5).map((attrValue) => {
+                                  const attr = ALL_ATTRIBUTES.find(a => a.value === attrValue);
+                                  return (
+                                    <li key={attrValue}>{attr?.label || attrValue}</li>
+                                  );
+                                })}
+                                {data.configuration.selectedCustomAttributes.length > 5 && (
+                                  <li className="text-xs">and {data.configuration.selectedCustomAttributes.length - 5} more...</li>
+                                )}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
               );
             })()}
-
-            
-            {data.requirements.requiredAttributes && data.requirements.requiredAttributes.length > 0 && (
-              <>
-                <Separator className="my-3" />
-                
-                <div className="space-y-2">
-                  <div className="font-medium text-sm">Attributes</div>
-                  <div className="flex flex-wrap gap-1">
-                    {data.requirements.requiredAttributes.map((attr) => (
-                      <Badge key={attr} variant="outline">{attr}</Badge>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
           </CardContent>
         </Card>
       </div>

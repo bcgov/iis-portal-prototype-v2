@@ -144,6 +144,8 @@ const IntegrationDetails = () => {
         clientProtocol: submittedIntegration.requirements.clientProtocol,
         useCase: submittedIntegration.requirements.useCase,
         dataClassification: submittedIntegration.requirements.dataClassification,
+        attributePackage: submittedIntegration.configuration?.attributePackage,
+        customAttributes: submittedIntegration.configuration?.selectedCustomAttributes || [],
         environments: envList
       };
     }
@@ -213,34 +215,87 @@ const IntegrationDetails = () => {
 
   const integration = loadIntegrationData();
 
+  // Map technical values to display names
+  const getUseCaseDisplay = (useCase: string) => {
+    switch (useCase) {
+      case 'browser-login':
+        return 'Browser Login';
+      case 'service-principal':
+      case 'service-account':
+        return 'Service Account';
+      case 'browser-and-service':
+        return 'Browser Login and Service Account';
+      default:
+        return useCase;
+    }
+  };
+
+  const getClientTypeDisplay = (clientType: string) => {
+    switch (clientType?.toLowerCase()) {
+      case 'confidential':
+        return 'Confidential Client';
+      case 'public':
+        return 'Public Client';
+      default:
+        return clientType;
+    }
+  };
+
+  const getClientProtocolDisplay = (protocol: string) => {
+    switch (protocol?.toLowerCase()) {
+      case 'oidc':
+        return 'OpenID Connect';
+      case 'saml':
+        return 'SAML';
+      default:
+        return protocol;
+    }
+  };
+
+  const getAttributePackageDisplay = (attributePackage?: string, customAttributes?: string[]) => {
+    if (attributePackage === 'name') {
+      return 'Name (Given name, Family name, Display name)';
+    } else if (attributePackage === 'sendInformation') {
+      return 'Send Information (Name, Mailing address, Email address)';
+    } else if (attributePackage === 'ageVerification') {
+      return 'Age Verification (Name, Mailing address, Email, Date of birth)';
+    } else if (customAttributes && customAttributes.length > 0) {
+      return `Custom Attributes (${customAttributes.length} attribute${customAttributes.length > 1 ? 's' : ''} selected)`;
+    }
+    return null;
+  };
+
   // Check if Person Credential is provisioned
   const hasPersonCredential = integration.identityProviders.some(
     (idp: string) => idp.toLowerCase().includes('person credential')
   );
 
-  // Generate a unique presentation configuration ID (25 characters alphanumeric)
-  const generatePresentationId = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding similar looking chars
-    const segments = ['PC', '', '', '', '', '', ''];
-    for (let i = 1; i < segments.length; i++) {
-      let segment = '';
-      const length = i === segments.length - 1 ? 2 : 3;
-      for (let j = 0; j < length; j++) {
-        segment += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      segments[i] = segment;
+  // Generate presentation configuration ID based on attribute package
+  const getPresentationConfigurationId = (attributePackage?: string, customAttributes?: string[]) => {
+    const prefix = "verified-person-bc";
+
+    if (attributePackage === 'name') {
+      return `${prefix}-name`;
+    } else if (attributePackage === 'sendInformation') {
+      return `${prefix}-sendinfo`;
+    } else if (attributePackage === 'ageVerification') {
+      return `${prefix}-ageverification`;
+    } else if (customAttributes && customAttributes.length > 0) {
+      return `${prefix}-custom`;
     }
-    return segments.join('-');
+
+    // Fallback default
+    return `${prefix}-default`;
   };
 
-  const presentationConfigId = `PC-${id?.slice(-20).toUpperCase()}` || generatePresentationId();
+  const presentationConfigId = getPresentationConfigurationId(integration.attributePackage, integration.customAttributes);
 
   const handleCopyPresentationId = () => {
     navigator.clipboard.writeText(presentationConfigId);
     setCopiedPresentationId(true);
     toast({
       title: "Copied to clipboard",
-      description: "Presentation Configuration ID has been copied.",
+      description: "Presentation Configuration ID copied to clipboard",
     });
     setTimeout(() => setCopiedPresentationId(false), 2000);
   };
@@ -296,11 +351,11 @@ const IntegrationDetails = () => {
         />
 
         {/* Summary Card */}
-        <Card className="mb-6 shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="mb-4 shadow-sm">
+          <CardHeader className="pb-2 pt-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-0.5">
                   <h1 className="text-xl font-bold text-foreground">
                     {integration.name}
                   </h1>
@@ -332,94 +387,114 @@ const IntegrationDetails = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3 pt-0">
-            {/* Basic Information */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Ministry</span>
-                <p className="text-sm mt-0.5">{integration.ministry}</p>
+          <CardContent className="pt-2 pb-4">
+            {/* Compact 3-Column Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 p-3 border rounded-lg bg-muted/20">
+              {/* Column 1 */}
+              <div className="space-y-2">
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground">Ministry</span>
+                  <p className="text-sm mt-1">{integration.ministry}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground">User Types</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {integration.userTypes.map((type) => (
+                      <Badge key={type} variant="outline" className="text-xs py-0">{type}</Badge>
+                    ))}
+                  </div>
+                </div>
+                {getAttributePackageDisplay(integration.attributePackage, integration.customAttributes) && (
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground">Attribute Package</span>
+                    <p className="text-sm mt-1">{getAttributePackageDisplay(integration.attributePackage, integration.customAttributes)}</p>
+                  </div>
+                )}
               </div>
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Environment</span>
-                <p className="text-sm mt-0.5">
-                  {integration.environments.map(env => env.name).join(', ')}
-                </p>
+
+              {/* Column 2 */}
+              <div className="space-y-2">
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground">Environment</span>
+                  <p className="text-sm mt-1">
+                    {integration.environments.map(env => env.name).join(', ')}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground">Identity Providers</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {integration.identityProviders.map((idp) => (
+                      <Badge key={idp} variant="secondary" className="text-xs py-0">{idp}</Badge>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Product Owner</span>
-                <p className="text-sm mt-0.5 font-medium">{integration.productOwner.name}</p>
-                <p className="text-xs text-muted-foreground">{integration.productOwner.email}</p>
-              </div>
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Technical Lead</span>
-                <p className="text-sm mt-0.5 font-medium">{integration.technicalLead.name}</p>
-                <p className="text-xs text-muted-foreground">{integration.technicalLead.email}</p>
+
+              {/* Column 3 */}
+              <div className="space-y-2">
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground">Product Owner</span>
+                  <p className="text-sm mt-1 font-medium">{integration.productOwner.name}</p>
+                  <p className="text-xs text-muted-foreground">{integration.productOwner.email}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground">Technical Lead</span>
+                  <p className="text-sm mt-1 font-medium">{integration.technicalLead.name}</p>
+                  <p className="text-xs text-muted-foreground">{integration.technicalLead.email}</p>
+                </div>
+                {integration.privacyZone && (
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground">Privacy Zone</span>
+                    <p className="text-sm mt-1">{integration.privacyZone}</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* User Types & Identity Providers */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">User Types</span>
-                <div className="flex flex-wrap gap-1.5 mt-0.5">
-                  {integration.userTypes.map((type) => (
-                    <Badge key={type} variant="outline" className="text-xs py-0">{type}</Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Identity Providers</span>
-                <div className="flex flex-wrap gap-1.5 mt-0.5">
-                  {integration.identityProviders.map((idp) => (
-                    <Badge key={idp} variant="secondary" className="text-xs py-0">{idp}</Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Privacy Zone - only if applicable */}
-            {integration.privacyZone && (
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Privacy Zone</span>
-                <p className="text-sm mt-0.5">{integration.privacyZone}</p>
-              </div>
-            )}
-
-            <Separator className="my-2" />
+            <Separator className="my-3" />
 
             {/* Technical Configuration - Collapsible */}
-            <Collapsible open={isTechConfigOpen} onOpenChange={setIsTechConfigOpen}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
-                  <span className="text-xs font-medium">Technical Configuration</span>
-                  {isTechConfigOpen ? (
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  ) : (
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground">Client Type</span>
-                    <p className="text-sm mt-0.5">{integration.clientType}</p>
+            <div className="border rounded-lg p-3 bg-muted/20">
+              <Collapsible open={isTechConfigOpen} onOpenChange={setIsTechConfigOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+                    <div className="flex items-center gap-2 flex-1 text-left">
+                      <span className="text-xs font-medium">Technical Configuration</span>
+                      {!isTechConfigOpen && (
+                        <span className="text-xs text-muted-foreground">
+                          {getClientTypeDisplay(integration.clientType)} • {getClientProtocolDisplay(integration.clientProtocol)} • {getUseCaseDisplay(integration.useCase)} • {integration.dataClassification}
+                        </span>
+                      )}
+                    </div>
+                    {isTechConfigOpen ? (
+                      <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground">Client Type</span>
+                      <p className="text-sm mt-1">{getClientTypeDisplay(integration.clientType)}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground">Client Protocol</span>
+                      <p className="text-sm mt-1">{getClientProtocolDisplay(integration.clientProtocol)}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground">Use Case</span>
+                      <p className="text-sm mt-1">{getUseCaseDisplay(integration.useCase)}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground">Data Classification</span>
+                      <p className="text-sm mt-1">{integration.dataClassification}</p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground">Client Protocol</span>
-                    <p className="text-sm mt-0.5">{integration.clientProtocol}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground">Use Case</span>
-                    <p className="text-sm mt-0.5">{integration.useCase}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground">Data Classification</span>
-                    <p className="text-sm mt-0.5">{integration.dataClassification}</p>
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
           </CardContent>
         </Card>
 
@@ -493,7 +568,7 @@ const IntegrationDetails = () => {
 
               <TabsContent value="technical" className="p-6 space-y-6">
                 {/* Person Credential Presentation Request Configuration */}
-                {hasPersonCredential && (
+                {hasPersonCredential && (integration.attributePackage || (integration.customAttributes && integration.customAttributes.length > 0)) && (
                   <div>
                     <h2 className="text-xl font-semibold mb-4">Person Credential Presentation Request Configuration</h2>
                     <Card className="border-2 border-primary/20 bg-primary/5">
@@ -528,7 +603,7 @@ const IntegrationDetails = () => {
                         <Alert className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/20">
                           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           <AlertDescription className="text-sm text-blue-900 dark:text-blue-100">
-                            <strong>Note:</strong> Currently, this ID is provided by the Digital Credentials team. Future automation will generate this automatically upon integration submission.
+                            <strong>Note:</strong> This ID is automatically generated based on your selected attribute package. Use this identifier when configuring Person Credential in your application.
                           </AlertDescription>
                         </Alert>
                       </CardContent>

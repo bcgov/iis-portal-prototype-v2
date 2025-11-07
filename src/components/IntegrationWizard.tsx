@@ -12,7 +12,6 @@ import SolutionStep from "./wizard/SolutionStep";
 
 import ConfigurationStep from "./wizard/ConfigurationStep";
 import ReviewStep from "./wizard/ReviewStep";
-import InternalOnlyOffRamp from "./wizard/InternalOnlyOffRamp";
 
 export interface WizardData {
   projectInfo: {
@@ -75,6 +74,8 @@ export interface WizardData {
       goLiveDate?: Date;
       businessApprovalContact?: string;
     };
+    attributePackage?: string;
+    selectedCustomAttributes?: string[];
     lastSaved?: Date;
   };
 }
@@ -202,12 +203,6 @@ const IntegrationWizard = ({ isEditMode = false, initialData, integrationId, ini
   };
 
   const nextStep = () => {
-    // Check if user selected "Internal Only" and redirect to off-ramp
-    if (currentStep === 0 && data.projectInfo.userCategory === "internal") {
-      setCurrentStep(5); // Jump to off-ramp step
-      return;
-    }
-    
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -248,15 +243,95 @@ const IntegrationWizard = ({ isEditMode = false, initialData, integrationId, ini
   const handleSubmit = () => {
     console.log(isEditMode ? "Integration updated:" : "Integration submitted:", data);
     setHasUnsavedChanges(false);
-    
-    toast({
-      title: isEditMode ? "Changes saved" : "Integration submitted",
-      description: isEditMode 
-        ? "Your integration has been updated successfully." 
-        : "Your integration request has been submitted for review.",
-    });
-    
-    navigate('/client');
+
+    if (isEditMode) {
+      // For edit mode, update existing integration in localStorage
+      const existingIntegrations = JSON.parse(localStorage.getItem('iis-integrations') || '[]');
+      const updatedIntegrations = existingIntegrations.map((int: any) =>
+        int.id === integrationId
+          ? {
+              ...int,
+              name: data.projectInfo.productName,
+              identityServices: data.solution.components || [],
+              environments: [
+                ...(data.configuration.development ? ['Development'] : []),
+                ...(data.configuration.test ? ['Test'] : []),
+                ...(data.configuration.production ? ['Production'] : [])
+              ],
+              ministry: data.projectInfo.ministry,
+              productOwner: {
+                name: data.projectInfo.productOwnerName,
+                email: data.projectInfo.productOwnerEmail
+              },
+              technicalLead: {
+                name: data.projectInfo.technicalLeadName,
+                email: data.projectInfo.technicalLeadEmail
+              },
+              description: data.projectInfo.productDescription,
+              projectInfo: data.projectInfo,
+              requirements: data.requirements,
+              solution: data.solution,
+              configuration: data.configuration,
+              updatedAt: new Date().toISOString(),
+              lastActivity: 'Just now'
+            }
+          : int
+      );
+      localStorage.setItem('iis-integrations', JSON.stringify(updatedIntegrations));
+
+      toast({
+        title: "Changes saved",
+        description: "Your integration has been updated successfully.",
+      });
+      navigate(`/client/integrations/${integrationId}`);
+    } else {
+      // For new integration, generate ID and store data
+      const newId = Date.now().toString(); // Simple unique ID for prototype
+
+      // Store the submitted integration data in localStorage
+      const submittedIntegration = {
+        id: newId,
+        requestId: `0000${newId.slice(-4)}`,
+        name: data.projectInfo.productName,
+        status: 'completed',
+        identityServices: data.solution.components || [],
+        environments: [
+          ...(data.configuration.development ? ['Development'] : []),
+          ...(data.configuration.test ? ['Test'] : []),
+          ...(data.configuration.production ? ['Production'] : [])
+        ],
+        lastActivity: 'Just now',
+        monthlyUsers: '0',
+        ministry: data.projectInfo.ministry,
+        productOwner: {
+          name: data.projectInfo.productOwnerName,
+          email: data.projectInfo.productOwnerEmail
+        },
+        technicalLead: {
+          name: data.projectInfo.technicalLeadName,
+          email: data.projectInfo.technicalLeadEmail
+        },
+        description: data.projectInfo.productDescription,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        // Keep wizard data for editing
+        projectInfo: data.projectInfo,
+        requirements: data.requirements,
+        solution: data.solution,
+        configuration: data.configuration
+      };
+
+      const existingIntegrations = JSON.parse(localStorage.getItem('iis-integrations') || '[]');
+      localStorage.setItem('iis-integrations', JSON.stringify([...existingIntegrations, submittedIntegration]));
+
+      toast({
+        title: "Integration submitted",
+        description: "Your integration request has been submitted successfully.",
+      });
+
+      // Navigate to the integration details page
+      navigate(`/client/integrations/${newId}`);
+    }
   };
 
   const renderStep = () => {
@@ -309,24 +384,13 @@ const IntegrationWizard = ({ isEditMode = false, initialData, integrationId, ini
         return (
           <ReviewStep data={data} onEditStep={setCurrentStep} />
         );
-      case 5:
-        return (
-          <InternalOnlyOffRamp
-            data={data.projectInfo}
-            onBack={() => setCurrentStep(0)}
-            onSubmit={handleSubmit}
-            progressValue={100}
-            currentStep={5}
-            totalSteps={5}
-          />
-        );
       default:
         return null;
     }
   };
 
-  // For steps 0, 1, and 5 (off-ramp), render the forms directly without the card wrapper
-  if (currentStep === 0 || currentStep === 1 || currentStep === 5) {
+  // For steps 0 and 1, render the forms directly without the card wrapper
+  if (currentStep === 0 || currentStep === 1) {
     return renderStep();
   }
 

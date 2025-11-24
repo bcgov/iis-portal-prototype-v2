@@ -56,8 +56,8 @@ const EditIntegration = () => {
         assuranceLevel: "2"
       },
       solution: {
-        recommended: "BC Services Card + Person Credential",
-        components: ["BC Services Card", "Person Credential"],
+        recommended: "BC Services Card + Single Companion Credential",
+        components: ["BC Services Card", "Single Companion Credential"],
         reasoning: "Based on your requirements for BC residents and Protected B data classification"
       },
       configuration: {

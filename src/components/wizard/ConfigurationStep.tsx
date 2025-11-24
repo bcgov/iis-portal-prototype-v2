@@ -108,7 +108,7 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
   // Determine which IDPs were recommended
   const recommendedIDPs = data.solution.components || [];
   const hasBCSC = recommendedIDPs.some(c => c.toLowerCase().includes('bc services card') || c.toLowerCase().includes('bcsc'));
-  const hasPersonCredential = recommendedIDPs.some(c => c.toLowerCase().includes('person credential'));
+  const hasPersonCredential = recommendedIDPs.some(c => c.toLowerCase().includes('single companion credential'));
   const hasBCeID = recommendedIDPs.some(c => c.toLowerCase().includes('bceid'));
   const hasAnyIDP = hasBCSC || hasPersonCredential || hasBCeID;
 
@@ -237,7 +237,7 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
 
         {hasAnyIDP ? (
           <div className="space-y-4">
-            {/* BC Services Card (or combined with Person Credential) */}
+            {/* BC Services Card (or combined with Single Companion Credential) */}
             {hasBCSC && (
               <Card className="border-2">
                 <CardHeader className="pb-3">
@@ -247,7 +247,7 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
                     </div>
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-lg">
-                        {hasPersonCredential ? "BC Services Card & Person Credential" : "BC Services Card"}
+                        {hasPersonCredential ? "BC Services Card & Single Companion Credential" : "BC Services Card"}
                       </CardTitle>
                     </div>
                   </div>
@@ -256,7 +256,7 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
                   {/* Explanatory text when both are present */}
                   {hasPersonCredential && (
                     <p className="text-sm text-muted-foreground">
-                      Person Credential and BC Services Card share the same user attributes. Configure which attributes your application needs below.
+                      Single Companion Credential and BC Services Card share the same user attributes. Configure which attributes your application needs below.
                     </p>
                   )}
 
@@ -608,9 +608,9 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
                         </div>
 
                         {(() => {
-                          // Check if BC Services Card, Person Credential, or BCeID are in recommended solutions
+                          // Check if BC Services Card, Single Companion Credential, or BCeID are in recommended solutions
                           const hasBCServicesOrBCeIDOrPersonCredential = data.solution.components.some(
-                            provider => provider === "BC Services Card" || provider === "Person Credential" || provider.includes("BCeID")
+                            provider => provider === "BC Services Card" || provider === "Single Companion Credential" || provider.includes("BCeID")
                           );
 
                           if (!hasBCServicesOrBCeIDOrPersonCredential) return null;
@@ -622,7 +622,7 @@ const ConfigurationStep = ({ data, onUpdate, onUpdateRequirements }: Configurati
                                 <div>
                                   <p className="text-sm font-medium text-blue-900">Production Environment Notice</p>
                                   <p className="text-sm text-blue-700 mt-1">
-                                    BC Services Card, Person Credential, and BCeID production environments require additional approvals. Our team will guide you through this approval process.
+                                    BC Services Card, Single Companion Credential, and BCeID production environments require additional approvals. Our team will guide you through this approval process.
                                   </p>
                                 </div>
                               </div>

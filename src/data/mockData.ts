@@ -30,7 +30,7 @@ export const initialIntegrations: Integration[] = [
     name: "Citizen Services Portal",
     status: "completed",
     environments: ["Production", "Test"],
-    identityServices: ["BC Services Card", "Person Credential", "BCeID"],
+    identityServices: ["BC Services Card", "Single Companion Credential", "BCeID"],
     lastActivity: "2 hours ago",
     monthlyUsers: "12.5K",
     ministry: "Citizens' Services",

@@ -49,10 +49,10 @@ const SolutionStep = ({ data, onUpdate }: SolutionStepProps) => {
               userExperience: "Users create a simple account with email verification"
             });
           } else if (dataClassification === "protected-a" || dataClassification === "protected-b" || dataClassification === "protected-c") {
-            // For Protected A, B, or C, recommend Person Credential (primary) and BC Services Card (secondary)
+            // For Protected A, B, or C, recommend Single Companion Credential (primary) and BC Services Card (secondary)
             solutions.push({
               userType,
-              provider: "Person Credential",
+              provider: "Single Companion Credential",
               description: "Quick and easy sign-in with their smartphone - no cards or passwords needed",
               userExperience: "Quick and easy sign-in with their smartphone - no cards or passwords needed"
             });
@@ -236,7 +236,7 @@ const SolutionStep = ({ data, onUpdate }: SolutionStepProps) => {
 
               return Object.entries(groupedSolutions).map(([userType, solutions]) => {
                 const hasBothCredentials = solutions.length > 1 &&
-                  solutions.some(s => s.provider === "Person Credential") &&
+                  solutions.some(s => s.provider === "Single Companion Credential") &&
                   solutions.some(s => s.provider === "BC Services Card");
 
                 if (hasBothCredentials) {
@@ -269,9 +269,9 @@ const SolutionStep = ({ data, onUpdate }: SolutionStepProps) => {
                             </div>
                           </div>
 
-                          {/* Primary Provider - Person Credential */}
+                          {/* Primary Provider - Single Companion Credential */}
                           <div className="ml-16 space-y-3">
-                            {solutions.filter(s => s.provider === "Person Credential").map((solution, idx) => (
+                            {solutions.filter(s => s.provider === "Single Companion Credential").map((solution, idx) => (
                               <div key={idx} className="border-l-2 border-primary pl-4 py-2">
                                 <div className="flex items-center space-x-2 mb-1">
                                   <Smartphone className="h-4 w-4 text-primary" />
@@ -285,7 +285,7 @@ const SolutionStep = ({ data, onUpdate }: SolutionStepProps) => {
                                       </TooltipTrigger>
                                       <TooltipContent className="max-w-xs">
                                         <p className="text-sm font-semibold mb-1">The modern way to sign in</p>
-                                        <p className="text-sm">Person Credential is our newest digital ID option. It works on smartphones and is faster and more convenient than physical cards.</p>
+                                        <p className="text-sm">Single Companion Credential is our newest digital ID option. It works on smartphones and is faster and more convenient than physical cards.</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>

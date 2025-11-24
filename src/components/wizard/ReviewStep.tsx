@@ -234,7 +234,7 @@ const ReviewStep = ({ data, onEditStep }: ReviewStepProps) => {
                       userTypeGroups[userType].push({ provider: "BCeID Basic" });
                     } else if (dataClassification === "protected-a" || dataClassification === "protected-b" || dataClassification === "protected-c") {
                       userTypeGroups[userType].push({
-                        provider: "Person Credential",
+                        provider: "Single Companion Credential",
                         icon: Smartphone,
                         tooltip: "Modern smartphone sign-in - most users will prefer this method."
                       });
@@ -356,7 +356,7 @@ const ReviewStep = ({ data, onEditStep }: ReviewStepProps) => {
               // Check which IDPs were recommended
               const recommendedIDPs = data.solution.components || [];
               const hasBCSC = recommendedIDPs.some(c => c.toLowerCase().includes('bc services card') || c.toLowerCase().includes('bcsc'));
-              const hasPersonCredential = recommendedIDPs.some(c => c.toLowerCase().includes('person credential'));
+              const hasPersonCredential = recommendedIDPs.some(c => c.toLowerCase().includes('single companion credential'));
 
               // Single configuration display for all cases
               return (
@@ -391,7 +391,7 @@ const ReviewStep = ({ data, onEditStep }: ReviewStepProps) => {
                       <Separator className="my-3" />
                       <div className="border rounded-lg p-3">
                         <h4 className="font-medium mb-2">
-                          {hasPersonCredential ? "BC Services Card & Person Credential" : "BC Services Card"}
+                          {hasPersonCredential ? "BC Services Card & Single Companion Credential" : "BC Services Card"}
                         </h4>
                         <div className="space-y-2 text-sm">
                           {data.configuration.attributePackage && !data.configuration.selectedCustomAttributes?.length && (

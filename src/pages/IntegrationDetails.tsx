@@ -159,7 +159,7 @@ const IntegrationDetails = () => {
       ministry: "Citizens' Services",
       userTypes: ["BC residents", "Canadian residents", "Government employees"],
       privacyZone: "Citizens' Services (Citizen)",
-      identityProviders: ["BC Services Card", "Person Credential", "BCeID Basic", "IDIR"],
+      identityProviders: ["BC Services Card", "Single Companion Credential", "BCeID Basic", "IDIR"],
       productOwner: {
         name: "Jane Smith",
         email: "jane.smith@gov.bc.ca"
@@ -265,9 +265,9 @@ const IntegrationDetails = () => {
     return null;
   };
 
-  // Check if Person Credential is provisioned
+  // Check if Single Companion Credential is provisioned
   const hasPersonCredential = integration.identityProviders.some(
-    (idp: string) => idp.toLowerCase().includes('person credential')
+    (idp: string) => idp.toLowerCase().includes('single companion credential')
   );
 
   // Generate presentation configuration ID based on attribute package
@@ -567,10 +567,10 @@ const IntegrationDetails = () => {
               </div>
 
               <TabsContent value="technical" className="p-6 space-y-6">
-                {/* Person Credential Presentation Request Configuration */}
+                {/* Single Companion Credential Presentation Request Configuration */}
                 {hasPersonCredential && (integration.attributePackage || (integration.customAttributes && integration.customAttributes.length > 0)) && (
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">Person Credential Presentation Request Configuration</h2>
+                    <h2 className="text-xl font-semibold mb-4">Single Companion Credential Presentation Request Configuration</h2>
                     <Card className="border-2 border-primary/20 bg-primary/5">
                       <CardContent className="p-6 space-y-4">
                         <div>
@@ -596,14 +596,14 @@ const IntegrationDetails = () => {
                             </Button>
                           </div>
                           <p className="text-sm text-muted-foreground mt-2">
-                            This unique identifier is used to configure Person Credential attribute mapping for your integration.
+                            This unique identifier is used to configure Single Companion Credential attribute mapping for your integration.
                           </p>
                         </div>
 
                         <Alert className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/20">
                           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           <AlertDescription className="text-sm text-blue-900 dark:text-blue-100">
-                            <strong>Note:</strong> This ID is automatically generated based on your selected attribute package. Use this identifier when configuring Person Credential in your application.
+                            <strong>Note:</strong> This ID is automatically generated based on your selected attribute package. Use this identifier when configuring Single Companion Credential in your application.
                           </AlertDescription>
                         </Alert>
                       </CardContent>
